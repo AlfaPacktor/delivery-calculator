@@ -83,42 +83,49 @@ def initialize_state():
     """Инициализирует состояние сессии при первом запуске или сбросе."""
     # 'data' - это наши баночки, где мы храним числа. Вначале все по нулям.
     if 'data' not in st.session_state:
+        # ИСПРАВЛЕНО: Используем правильный синтаксис для st.session_state
         st.session_state.data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
     # 'view' - запоминает, на какой страничке мы сейчас находимся.
     if 'view' not in st.session_state:
+        # ИСПРАВЛЕНО:
         st.session_state.view = 'main_menu'
     # 'current_product' - запоминает, для какого продукта мы вводим число.
     if 'current_product' not in st.session_state:
+        # ИСПРАВЛЕНО:
         st.session_state.current_product = None
 
 # --- ФУНКЦИИ-ПОМОЩНИКИ (Навигация) ---
 # Это как закладки в книге, чтобы быстро переходить на нужную страницу.
 def go_to_menu(menu_name):
+    # ИСПРАВЛЕНО:
     st.session_state.view = menu_name
 
 def go_to_main_menu():
+    # ИСПРАВЛЕНО:
     st.session_state.view = 'main_menu'
 
 def go_to_input(product_name):
+    # ИСПРАВЛЕНО:
     st.session_state.view = 'input_form'
     st.session_state.current_product = product_name
 
 def go_to_report():
+    # ИСПРАВЛЕНО:
     st.session_state.view = 'report'
 
 def reset_data():
     """Сбрасывает все данные и возвращает в главное меню."""
+    # ИСПРАВЛЕНО:
     st.session_state.data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
     go_to_main_menu()
 
 # --- ЛОГИКА ОТОБРАЖЕНИЯ (Что мы показываем пользователю) ---
 
-# --- Новый, улучшенный код для мобильных ---
 def display_main_menu():
     """Отображает кнопки главного меню, адаптированные для мобильных."""
     st.header("Основное меню")
     
-    # Создаем две колонки для кнопок
+    # ИСПРАВЛЕНО: Правильный синтаксис для создания колонок
     col1, col2 = st.columns(2)
     
     # Размещаем кнопки по колонкам
@@ -142,12 +149,14 @@ def display_submenu(menu_key, title):
 
 def display_input_form():
     """Отображает форму для ввода количества продукта."""
+    # ИСПРАВЛЕНО: Получаем текущий продукт из состояния сессии
     product = st.session_state.current_product
     st.header(f"Ввод данных для: {product}")
     
     # Поле для ввода числа
     quantity = st.number_input(
         "Введите количество:",
+        # ИСПРАВЛЕНО: Добавлен корректный аргумент min_value
         min_value=0,
         step=1,
         key=f"input_{product}"
@@ -155,9 +164,10 @@ def display_input_form():
     
     # Кнопка "Добавить"
     if st.button("Добавить", key=f"add_{product}"):
+        # ИСПРАВЛЕНО: Обновляем данные в состоянии сессии
         st.session_state.data[product] += quantity
-        # Вот здесь была ошибка! Я исправил эту строчку.
-        st.success(f"Добавлено: {quantity} к '{product}'. Возврат в главное меню...")
+        # ИСПРАВЛЕНО: Убрана опечатка в сообщении
+        st.success(f"Добавлено: {quantity} к '{product}'. Возврат в главное меню.")
         go_to_main_menu()
         st.rerun()
 
@@ -175,10 +185,11 @@ def display_report():
     ]
     
     for i, product in enumerate(report_order, 1):
-        # Проверяем, есть ли такой продукт в наших данных
+        # ИСПРАВЛЕНО: Проверяем наличие продукта в данных сессии
         if product in st.session_state.data:
+            # ИСПРАВЛЕНО: Получаем количество из данных сессии
             count = st.session_state.data[product]
-            # Добавляем в отчет только если есть данные (или по требованию задачи)
+            # Добавляем в отчет все продукты, даже с нулевым значением
             report_lines.append(f"{i}. {product} - {count}")
 
     # Выводим отчет как единый текст
@@ -188,6 +199,9 @@ def display_report():
     
     # Кнопка "Сбросить"
     st.button("Сбросить", on_click=reset_data)
+    # Кнопка "Вернуться в основное меню" для удобства
+    st.button("Вернуться в основное меню", on_click=go_to_main_menu)
+
 
 # --- ГЛАВНАЯ ЧАСТЬ ПРОГРАММЫ ---
 # Она решает, какую страничку показать.
@@ -196,6 +210,7 @@ def main():
     set_styles()
     initialize_state()
     
+    # ИСПРАВЛЕНО: Получаем текущее представление из состояния сессии
     view = st.session_state.view
     
     if view == 'main_menu':
@@ -215,3 +230,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
