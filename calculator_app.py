@@ -113,13 +113,24 @@ def reset_data():
 
 # --- ЛОГИКА ОТОБРАЖЕНИЯ (Что мы показываем пользователю) ---
 
+# --- Новый, улучшенный код для мобильных ---
 def display_main_menu():
-    """Отображает кнопки главного меню."""
+    """Отображает кнопки главного меню, адаптированные для мобильных."""
     st.header("Основное меню")
-    st.button("ДК", on_click=go_to_menu, args=("dk_menu",))
-    st.button("КК", on_click=go_to_menu, args=("kk_menu",))
-    st.button("Селфи", on_click=go_to_menu, args=("selfie_menu",))
-    st.button("МП", on_click=go_to_menu, args=("mp_menu",))
+    
+    # Создаем две колонки для кнопок
+    col1, col2 = st.columns(2)
+    
+    # Размещаем кнопки по колонкам
+    with col1:
+        st.button("ДК", on_click=go_to_menu, args=("dk_menu",))
+        st.button("Селфи", on_click=go_to_menu, args=("selfie_menu",))
+    
+    with col2:
+        st.button("КК", on_click=go_to_menu, args=("kk_menu",))
+        st.button("МП", on_click=go_to_menu, args=("mp_menu",))
+        
+    # Кнопку отчета делаем на всю ширину под колонками
     st.button("Сформировать отчет", on_click=go_to_report)
 
 def display_submenu(menu_key, title):
