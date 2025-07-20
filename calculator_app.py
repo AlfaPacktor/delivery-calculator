@@ -157,7 +157,7 @@ def display_input_form():
     if st.button("Добавить", key=f"add_{product}"):
         st.session_state.data[product] += quantity
         # Вот здесь была ошибка! Я исправил эту строчку.
-        st.success(f"Добавлено: {quantity} к '{product}'. Возврат в главное меню...")
+        st.success(f"Добавлено: {quantity} к '{product}'. Возврат в главное меню.")
         go_to_main_menu()
         st.rerun()
 
