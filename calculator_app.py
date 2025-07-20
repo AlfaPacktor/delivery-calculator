@@ -83,10 +83,135 @@ def initialize_state():
     """Инициализирует состояние сессии при первом запуске или сбросе."""
     # 'data' - это наши баночки, где мы храним числа. Вначале все по нулям.
     if 'data' not in st.session_state:
-        # ИСПРАВЛЕНО: Используем st.session_state.data
         st.session_state.data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
     # 'view' - запоминает, на какой страничке мы сейчас находимся.
     if 'view' not in st.session_state:
-        # ИСПРАВЛЕНО: Используем st.session_state.view
         st.session_state.view = 'main_menu'
-    # 'current_product' - запоминает, для какого продукта мы в
+    # 'current_product' - запоминает, для какого продукта мы вводим число.
+    if 'current_product' not in st.session_state:
+        st.session_state.current_product = None
+
+# --- ФУНКЦИИ-ПОМОЩНИКИ (Навигация) ---
+# Это как закладки в книге, чтобы быстро переходить на нужную страницу.
+def go_to_menu(menu_name):
+    st.session_state.view = menu_name
+
+def go_to_main_menu():
+    st.session_state.view = 'main_menu'
+
+def go_to_input(product_name):
+    st.session_state.view = 'input_form'
+    st.session_state.current_product = product_name
+
+def go_to_report():
+    st.session_state.view = 'report'
+
+def reset_data():
+    """Сбрасывает все данные и возвращает в главное меню."""
+    st.session_state.data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
+    go_to_main_menu()
+
+# --- ЛОГИКА ОТОБРАЖЕНИЯ (Что мы показываем пользователю) ---
+
+# --- Новый, улучшенный код для мобильных ---
+def display_main_menu():
+    """Отображает кнопки главного меню, адаптированные для мобильных."""
+    st.header("Основное меню")
+    
+    # Создаем две колонки для кнопок
+    col1, col2 = st.columns(2)
+    
+    # Размещаем кнопки по колонкам
+    with col1:
+        st.button("ДК", on_click=go_to_menu, args=("dk_menu",))
+        st.button("Селфи", on_click=go_to_menu, args=("selfie_menu",))
+    
+    with col2:
+        st.button("КК", on_click=go_to_menu, args=("kk_menu",))
+        st.button("МП", on_click=go_to_menu, args=("mp_menu",))
+        
+    # Кнопку отчета делаем на всю ширину под колонками
+    st.button("Сформировать отчет", on_click=go_to_report)
+
+def display_submenu(menu_key, title):
+    """Отображает кнопки подменю."""
+    st.header(title)
+    for product in MENUS[menu_key]:
+        st.button(product, key=f"{menu_key}_{product}", on_click=go_to_input, args=(product,))
+    st.button("Вернуться в основное меню", key=f"back_{menu_key}", on_click=go_to_main_menu)
+
+def display_input_form():
+    """Отображает форму для ввода количества продукта."""
+    product = st.session_state.current_product
+    st.header(f"Ввод данных для: {product}")
+    
+    # Поле для ввода числа
+    quantity = st.number_input(
+        "Введите количество:",
+        min_value=0,
+        step=1,
+        key=f"input_{product}"
+    )
+    
+    # Кнопка "Добавить"
+    if st.button("Добавить", key=f"add_{product}"):
+        st.session_state.data[product] += quantity
+        # Вот здесь была ошибка! Я исправил эту строчку.
+        st.success(f"Добавлено: {quantity} к '{product}'. Возврат в главное меню...")
+        go_to_main_menu()
+        st.rerun()
+
+def display_report():
+    """Отображает итоговый отчет."""
+    st.header("Отчет")
+    
+    report_lines = []
+    # Список продуктов для отчета в нужном порядке
+    report_order = [
+        "ДК", "КК", "Комбо/Кросс КК", "ЦП", "Смарт", "Кешбек", "ЖКУ", "БС",
+        "Инвесткопилка", "БС со Стратегией", "Токенизация", "Накопительный Счет",
+        "Вклад", "Детская Кросс", "Стикер Кросс", "Сим-Карта", "Кросс ДК",
+        "Селфи ДК", "Селфи КК", "Мобильное Приложение"
+    ]
+    
+    for i, product in enumerate(report_order, 1):
+        # Проверяем, есть ли такой продукт в наших данных
+        if product in st.session_state.data:
+            count = st.session_state.data[product]
+            # Добавляем в отчет только если есть данные (или по требованию задачи)
+            report_lines.append(f"{i}. {product} - {count}")
+
+    # Выводим отчет как единый текст
+    st.markdown(f"<div class='report-text'>{'<br>'.join(report_lines)}</div>", unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True) # Небольшой отступ
+    
+    # Кнопка "Сбросить"
+    st.button("Сбросить", on_click=reset_data)
+
+# --- ГЛАВНАЯ ЧАСТЬ ПРОГРАММЫ ---
+# Она решает, какую страничку показать.
+def main():
+    """Основная функция, запускающая приложение."""
+    set_styles()
+    initialize_state()
+    
+    view = st.session_state.view
+    
+    if view == 'main_menu':
+        display_main_menu()
+    elif view == 'dk_menu':
+        display_submenu('ДК', 'Меню для ДК')
+    elif view == 'kk_menu':
+        display_submenu('КК', 'Меню для КК')
+    elif view == 'selfie_menu':
+        display_submenu('Селфи', 'Меню для Селфи')
+    elif view == 'mp_menu':
+        display_submenu('МП', 'Меню для МП')
+    elif view == 'input_form':
+        display_input_form()
+    elif view == 'report':
+        display_report()
+
+if __name__ == "__main__":
+    main()
