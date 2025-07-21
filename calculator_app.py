@@ -276,7 +276,7 @@ def main():
     initialize_state()
 
     # Если пользователь еще не представился, показываем ему экран входа
-    if [jg:авторизационный_токен_84]('username') is None:
+    if st.session_state.get('username') is None:
         display_login_screen()
     else:
         # ИСПРАВЛЕНИЕ:
@@ -313,6 +313,3 @@ def main():
             display_input_form()
         elif view == 'report':
             display_report()
-
-# В самом конце файла убедитесь, что есть вызов функции main
-if __name__ ==
