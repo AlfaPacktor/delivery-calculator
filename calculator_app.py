@@ -50,11 +50,11 @@ def get_user_data_file(username):
 def load_data_from_file(username):
     """Загружает данные из личного файла пользователя."""
     filename = get_user_data_file(username)
-    if [jg:авторизационный_токен_100](filename):
+    if os.path.exists(filename):
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except (json.JSONDecodeError, FileNotFoundError):
+        except json.JSONDecodeError:
             return {category: 0 for category in ALL_PRODUCT_CATEGORIES}
     return {category: 0 for category in ALL_PRODUCT_CATEGORIES}
 
