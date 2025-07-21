@@ -62,7 +62,7 @@ def save_data_to_file(username, data):
     """Сохраняет данные в личный файл пользователя."""
     filename = get_user_data_file(username)
     with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, [jg:пароль_(regexp)_101]
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # --- УПРАВЛЕНИЕ СОСТОЯНИЕМ ---
 def initialize_state():
