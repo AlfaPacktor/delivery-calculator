@@ -177,38 +177,42 @@ def display_report():
 
 
 # --- ГЛАВНАЯ ЧАСТЬ ПРОГРАММЫ (НАШ "ДИРИЖЕР") ---
+# ЗАМЕНИТЕ ВАШУ ФУНКЦИЮ MAIN НА ЭТУ
 def main():
     """Основная функция, запускающая приложение."""
     set_styles()
-    initialize_state()
+    
+    # Получаем доступ к "станоку для карт" в самом начале
+    cookies = stx.CookieManager()
+    
+    # ПРОВЕРКА "КАРТЫ-КЛЮЧА":
+    # Пытаемся прочитать имя пользователя из cookie
+    username_from_cookie = cookies.get('username')
+    
+    # Инициализируем состояние, но теперь с оглядкой на cookie
+    if 'username' not in st.session_state:
+        st.session_state['username'] = username_from_cookie # Если в памяти пусто, берем имя с карты!
+    
+    initialize_state() # Вызываем остальную инициализацию
 
-    # Сначала "дирижер" смотрит, представился ли пользователь
+    # Теперь основная логика
     if st.session_state.get('username') is None:
-        # Если нет - показывает экран входа и больше ничего не делает
         display_login_screen()
     else:
-        # Если пользователь представился, начинается основная работа
-
-        # Проверяем, загружали ли мы уже данные из "блокнота"
         if 'data_loaded' not in st.session_state:
-            # Если нет - загружаем один раз и ставим "галочку"
             st.session_state['data'] = load_data_from_file(st.session_state['username'])
             st.session_state['data_loaded'] = True
         
-        # Для удобства показываем, кто вошел, и даем кнопку для выхода
-        # Используем боковую панель, чтобы не мешать основному меню
-        st.sidebar.info(f"Вы вошли как: **{st.session_state['username']}**")
+        st.sidebar.markdown(f"Вы вошли как: **{st.session_state['username']}**")
         if st.sidebar.button("Сменить пользователя"):
-            # При выходе полностью очищаем всю временную память
+            # При выходе мы должны забрать "карту-ключ" обратно!
+            cookies.delete('username')
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
-            # И перезагружаем страницу, чтобы снова показать экран входа
             st.rerun()
 
-        # Теперь "дирижер" смотрит, на какой странице мы должны быть
         view = st.session_state.get('view', 'main_menu')
         
-        # И показывает нужную страницу
         if view == 'main_menu':
             display_main_menu()
         elif view == 'dk_menu':
