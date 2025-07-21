@@ -112,7 +112,7 @@ def display_login_screen():
 def display_main_menu():
     """Отображает кнопки главного меню."""
     st.header("Основное меню")
-    col1, col2 = [jg:пароль_(regexp)_102]
+    col1, col2 = st.columns(2)
     with col1:
         st.button("ДК", on_click=go_to_menu, args=("dk_menu",))
         st.button("Селфи", on_click=go_to_menu, args=("selfie_menu",))
