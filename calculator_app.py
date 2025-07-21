@@ -94,7 +94,6 @@ def reset_data():
     st.session_state['data'] = fresh_data
     save_data_to_file(st.session_state['username'], fresh_data)
     go_to_main_menu()
-    st.rerun()
 
 # --- ЛОГИКА ОТОБРАЖЕНИЯ ---
 def display_login_screen():
