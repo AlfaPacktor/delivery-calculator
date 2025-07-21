@@ -2,6 +2,9 @@
 
 import streamlit as st
 
+import json
+import os
+
 # --- СТРУКТУРЫ ДАННЫХ И КОНФИГУРАЦИЯ ---
 # Это как список всех возможных баночек для наших подсчетов.
 # Мы заранее готовим место для каждого продукта.
@@ -33,6 +36,9 @@ MENUS = {
         "Мобильное Приложение"
     ]
 }
+
+# NEW: Define the filename for our data "notebook"
+DATA_FILE = "calculator_data.json"
 
 # --- СТИЛИЗАЦИЯ (CSS) ---
 # Здесь мы "украшаем" наш блокнот: делаем белый фон, красивые кнопки
@@ -77,22 +83,38 @@ def set_styles():
         </style>
     """, unsafe_allow_html=True)
 
+
+
+# --- NEW HELPER FUNCTIONS FOR FILE OPERATIONS ---
+
+def load_data_from_file():
+    """Loads data from the JSON file. If the file doesn't exist, returns a default structure."""
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            # If the file is corrupted or empty, start fresh
+            return {category: 0 for category in ALL_PRODUCT_CATEGORIES}
+    # If file not found, start with fresh data
+    return {category: 0 for category in ALL_PRODUCT_CATEGORIES}
+
+def save_data_to_file(data):
+    """Saves the provided data to the JSON file."""
+    with open(DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
 # --- УПРАВЛЕНИЕ СОСТОЯНИЕМ ---
 # Это "память" нашего блокнота.
 def initialize_state():
-    """Инициализирует состояние сессии при первом запуске или сбросе."""
-    # 'data' - это наши баночки, где мы храним числа. Вначале все по нулям.
+    """Инициализирует состояние сессии, загружая данные из файла при первом запуске."""
     if 'data' not in st.session_state:
-        # ИСПРАВЛЕНО: Используем правильный синтаксис для st.session_state
-        st.session_state.data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
-    # 'view' - запоминает, на какой страничке мы сейчас находимся.
+        # MODIFIED: Load data from file instead of creating new
+        st.session_state['data'] = load_data_from_file()
     if 'view' not in st.session_state:
-        # ИСПРАВЛЕНО:
-        st.session_state.view = 'main_menu'
-    # 'current_product' - запоминает, для какого продукта мы вводим число.
+        st.session_state['view'] = 'main_menu'
     if 'current_product' not in st.session_state:
-        # ИСПРАВЛЕНО:
-        st.session_state.current_product = None
+        st.session_state['current_product'] = None
 
 # --- ФУНКЦИИ-ПОМОЩНИКИ (Навигация) ---
 # Это как закладки в книге, чтобы быстро переходить на нужную страницу.
@@ -114,9 +136,13 @@ def go_to_report():
     st.session_state.view = 'report'
 
 def reset_data():
-    """Сбрасывает все данные и возвращает в главное меню."""
-    # ИСПРАВЛЕНО:
-    st.session_state.data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
+    """Сбрасывает все данные, сохраняет пустые данные в файл и возвращает в главное меню."""
+    # Create a fresh, empty data structure
+    fresh_data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
+    # Update the session state
+    st.session_state['data'] = fresh_data
+    # NEW: Save this empty state to the file
+    save_data_to_file(fresh_data)
     go_to_main_menu()
 
 # --- ЛОГИКА ОТОБРАЖЕНИЯ (Что мы показываем пользователю) ---
@@ -164,9 +190,9 @@ def display_input_form():
     
     # Кнопка "Добавить"
     if st.button("Добавить", key=f"add_{product}"):
-        # ИСПРАВЛЕНО: Обновляем данные в состоянии сессии
-        st.session_state.data[product] += quantity
-        # ИСПРАВЛЕНО: Убрана опечатка в сообщении
+        st.session_state['data'][product] += quantity
+        # NEW: Save the updated data to our file "notebook"
+        save_data_to_file(st.session_state['data'])
         st.success(f"Добавлено: {quantity} к '{product}'. Возврат в главное меню.")
         go_to_main_menu()
         st.rerun()
@@ -230,4 +256,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
