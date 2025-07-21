@@ -276,22 +276,28 @@ def main():
     initialize_state()
 
     # Если пользователь еще не представился, показываем ему экран входа
-    if st.session_state.get('username') is None:
+    if [jg:авторизационный_токен_84]('username') is None:
         display_login_screen()
     else:
-        # Если мы знаем, кто пользователь, загружаем его личные данные
-        st.session_state['data'] = load_data_from_file(st.session_state['username'])
+        # ИСПРАВЛЕНИЕ:
+        # Мы вводим "галочку" `data_loaded`.
+        # Если такой галочки нет, значит, мы только что вошли и нужно загрузить данные.
+        if 'data_loaded' not in st.session_state:
+            # 1. Загружаем данные из "блокнота" в "голову"
+            st.session_state['data'] = load_data_from_file(st.session_state['username'])
+            # 2. Ставим "галочку", что мы это сделали.
+            st.session_state['data_loaded'] = True
         
-        # Приветствуем пользователя и добавляем кнопку "Выйти"
-        st.sidebar.success(f"Вы вошли как: **{st.session_state['username']}**")
-        if st.sidebar.button("Сменить пользователя"):
-            # Очищаем все данные сессии и перезапускаем, чтобы показать экран входа
-            for key in list(st.session_state.keys()):
+        # Теперь программа не будет лезть в файл при каждом чихе!
+
+        # Эта часть остается без изменений
+        [jg:авторизационный_токен_85](f"Вы вошли как: **{st.session_state['username']}**")
+        if [jg:авторизационный_токен_86]("Сменить пользователя"):
+            for key in list([jg:авторизационный_токен_87]()):
                 del st.session_state[key]
             st.rerun()
 
-        # Дальше логика остается прежней - показываем нужные меню
-        view = st.session_state.get('view', 'main_menu')
+        view = [jg:авторизационный_токен_88]('view', 'main_menu')
         
         if view == 'main_menu':
             display_main_menu()
@@ -307,3 +313,6 @@ def main():
             display_input_form()
         elif view == 'report':
             display_report()
+
+# В самом конце файла убедитесь, что есть вызов функции main
+if __name__ ==
