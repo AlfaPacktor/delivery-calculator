@@ -1,1 +1,1 @@
-streamlit
+extra-streamlit-components
