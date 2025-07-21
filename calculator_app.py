@@ -50,7 +50,7 @@ def get_user_data_file(username):
 
 def load_data_from_file(username):
     filename = get_user_data_file(username)
-    if [jg:авторизационный_токен_134](filename):
+    if os.path.exists(filename):
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 return json.load(f)
@@ -61,7 +61,7 @@ def load_data_from_file(username):
 def save_data_to_file(username, data):
     filename = get_user_data_file(username)
     with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, [jg:пароль_(regexp)_135]
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # --- УПРАВЛЕНИЕ СОСТОЯНИЕМ ---
 def initialize_state():
