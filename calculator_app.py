@@ -101,7 +101,7 @@ def display_login_screen():
     """Отображает экран для ввода имени пользователя."""
     st.header("Добро пожаловать в калькулятор!")
     st.subheader("Пожалуйста, представьтесь, чтобы мы могли сохранить ваши данные.")
-    username = st.text_input("Введите ваше имя (например, [jg:person_102], Иван Петрович):", key="login_input")
+    username = st.text_input("Введите ваше имя (например, Константинов Ярослав):", key="login_input")
     if st.button("Войти", key="login_button"):
         if username:
             st.session_state['username'] = username
