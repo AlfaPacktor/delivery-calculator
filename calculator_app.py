@@ -5,7 +5,6 @@ import streamlit as st
 import json
 import os
 import datetime
-from streamlit_cookies_manager import CookieManager
 
 # --- СТРУКТУРЫ ДАННЫХ И КОНФИГУРАЦИЯ ---
 ALL_PRODUCT_CATEGORIES = [
