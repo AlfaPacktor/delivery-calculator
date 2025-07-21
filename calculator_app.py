@@ -85,34 +85,47 @@ def set_styles():
 
 
 
-# --- NEW HELPER FUNCTIONS FOR FILE OPERATIONS ---
+# --- ФУНКЦИИ ДЛЯ РАБОТЫ С ФАЙЛАМИ (для каждого пользователя свой файл) ---
 
-def load_data_from_file():
-    """Loads data from the JSON file. If the file doesn't exist, returns a default structure."""
-    if os.path.exists(DATA_FILE):
+def get_user_data_file(username):
+    """Создает имя файла на основе имени пользователя (например, data_Анна.json)."""
+    # Убираем из имени символы, которые не могут быть в названии файла
+    safe_username = "".join(c for c in username if c.isalnum() or c in (' ', '_')).rstrip()
+    return f"data_{safe_username}.json"
+
+def load_data_from_file(username):
+    """Загружает данные из личного файла пользователя."""
+    filename = get_user_data_file(username)
+    if os.path.exists(filename):
         try:
-            with open(DATA_FILE, 'r', encoding='utf-8') as f:
+            with open(filename, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            # If the file is corrupted or empty, start fresh
             return {category: 0 for category in ALL_PRODUCT_CATEGORIES}
-    # If file not found, start with fresh data
     return {category: 0 for category in ALL_PRODUCT_CATEGORIES}
 
-def save_data_to_file(data):
-    """Saves the provided data to the JSON file."""
-    with open(DATA_FILE, 'w', encoding='utf-8') as f:
+def save_data_to_file(username, data):
+    """Сохраняет данные в личный файл пользователя."""
+    filename = get_user_data_file(username)
+    with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 # --- УПРАВЛЕНИЕ СОСТОЯНИЕМ ---
 # Это "память" нашего блокнота.
+
 def initialize_state():
-    """Инициализирует состояние сессии, загружая данные из файла при первом запуске."""
+    """Инициализирует состояние сессии."""
+    # Запоминаем, кто сейчас пользуется калькулятором. Вначале - никто.
+    if 'username' not in st.session_state:
+        st.session_state['username'] = None
+    
+    # Эти строчки остаются как были, но теперь данные будут загружаться для конкретного пользователя
     if 'data' not in st.session_state:
-        # MODIFIED: Load data from file instead of creating new
-        st.session_state['data'] = load_data_from_file()
+        st.session_state['data'] = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
+    
     if 'view' not in st.session_state:
         st.session_state['view'] = 'main_menu'
+        
     if 'current_product' not in st.session_state:
         st.session_state['current_product'] = None
 
@@ -135,17 +148,43 @@ def go_to_report():
     # ИСПРАВЛЕНО:
     st.session_state.view = 'report'
 
+# КНОПКА СБРОСА ДАННЫХ ДЛЯ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ:
 def reset_data():
-    """Сбрасывает все данные, сохраняет пустые данные в файл и возвращает в главное меню."""
-    # Create a fresh, empty data structure
+    """Сбрасывает данные для ТЕКУЩЕГО пользователя и сохраняет пустоту в его личный файл."""
+    # 1. Создаем новый пустой "холодильник" (набор пустых данных)
     fresh_data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
-    # Update the session state
+    
+    # 2. Ставим этот пустой холодильник в квартиру текущего пользователя (в его временную память)
     st.session_state['data'] = fresh_data
-    # NEW: Save this empty state to the file
-    save_data_to_file(fresh_data)
+    
+    # 3. ГЛАВНОЕ ИЗМЕНЕНИЕ:
+    # Мы говорим "уборщику": "Сохрани эти пустые данные для вот этого пользователя!"
+    # Теперь уборка происходит в личном файле.
+    save_data_to_file(st.session_state['username'], fresh_data)
+    
+    # 4. Возвращаем пользователя в главное меню
     go_to_main_menu()
+    
+    # 5. Дополнительно перезагружаем страницу, чтобы все точно обновилось
+    st.rerun()
+
 
 # --- ЛОГИКА ОТОБРАЖЕНИЯ (Что мы показываем пользователю) ---
+
+def display_login_screen():
+    """Отображает экран для ввода имени пользователя."""
+    st.header("Добро пожаловать в калькулятор!")
+    st.subheader("Пожалуйста, представьтесь, чтобы мы могли сохранить ваши данные.")
+    
+    username = st.text_input("Введите ваше имя (например, Анна, Иван Петрович):")
+    
+    if st.button("Войти"):
+        if username:
+            # Запоминаем имя пользователя в "памяти" сессии
+            st.session_state['username'] = username
+            st.rerun() # Сразу перезапускаем страницу, чтобы показать главное меню
+        else:
+            st.warning("Пожалуйста, введите имя.")
 
 def display_main_menu():
     """Отображает кнопки главного меню, адаптированные для мобильных."""
@@ -175,14 +214,11 @@ def display_submenu(menu_key, title):
 
 def display_input_form():
     """Отображает форму для ввода количества продукта."""
-    # ИСПРАВЛЕНО: Получаем текущий продукт из состояния сессии
-    product = st.session_state.current_product
+    product = st.session_state['current_product']
     st.header(f"Ввод данных для: {product}")
     
-    # Поле для ввода числа
     quantity = st.number_input(
         "Введите количество:",
-        # ИСПРАВЛЕНО: Добавлен корректный аргумент min_value
         min_value=0,
         step=1,
         key=f"input_{product}"
@@ -191,8 +227,11 @@ def display_input_form():
     # Кнопка "Добавить"
     if st.button("Добавить", key=f"add_{product}"):
         st.session_state['data'][product] += quantity
-        # NEW: Save the updated data to our file "notebook"
-        save_data_to_file(st.session_state['data'])
+        #
+        # А ВОТ ИСПРАВЛЕННАЯ СТРОЧКА:
+        # MODIFIED: We now tell the function WHO is saving the data
+        save_data_to_file(st.session_state['username'], st.session_state['data'])
+        #
         st.success(f"Добавлено: {quantity} к '{product}'. Возврат в главное меню.")
         go_to_main_menu()
         st.rerun()
@@ -229,30 +268,42 @@ def display_report():
     st.button("Вернуться в основное меню", on_click=go_to_main_menu)
 
 
+
 # --- ГЛАВНАЯ ЧАСТЬ ПРОГРАММЫ ---
-# Она решает, какую страничку показать.
 def main():
     """Основная функция, запускающая приложение."""
     set_styles()
     initialize_state()
-    
-    # ИСПРАВЛЕНО: Получаем текущее представление из состояния сессии
-    view = st.session_state.view
-    
-    if view == 'main_menu':
-        display_main_menu()
-    elif view == 'dk_menu':
-        display_submenu('ДК', 'Меню для ДК')
-    elif view == 'kk_menu':
-        display_submenu('КК', 'Меню для КК')
-    elif view == 'selfie_menu':
-        display_submenu('Селфи', 'Меню для Селфи')
-    elif view == 'mp_menu':
-        display_submenu('МП', 'Меню для МП')
-    elif view == 'input_form':
-        display_input_form()
-    elif view == 'report':
-        display_report()
 
-if __name__ == "__main__":
-    main()
+    # Если пользователь еще не представился, показываем ему экран входа
+    if st.session_state.get('username') is None:
+        display_login_screen()
+    else:
+        # Если мы знаем, кто пользователь, загружаем его личные данные
+        st.session_state['data'] = load_data_from_file(st.session_state['username'])
+        
+        # Приветствуем пользователя и добавляем кнопку "Выйти"
+        st.sidebar.success(f"Вы вошли как: **{st.session_state['username']}**")
+        if st.sidebar.button("Сменить пользователя"):
+            # Очищаем все данные сессии и перезапускаем, чтобы показать экран входа
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
+
+        # Дальше логика остается прежней - показываем нужные меню
+        view = st.session_state.get('view', 'main_menu')
+        
+        if view == 'main_menu':
+            display_main_menu()
+        elif view == 'dk_menu':
+            display_submenu('ДК', 'Меню для ДК')
+        elif view == 'kk_menu':
+            display_submenu('КК', 'Меню для КК')
+        elif view == 'selfie_menu':
+            display_submenu('Селфи', 'Меню для Селфи')
+        elif view == 'mp_menu':
+            display_submenu('МП', 'Меню для МП')
+        elif view == 'input_form':
+            display_input_form()
+        elif view == 'report':
+            display_report()
