@@ -99,13 +99,22 @@ def reset_data():
 
 # --- ЛОГИКА ОТОБРАЖЕНИЯ ---
 def display_login_screen():
-    """Отображает экран для ввода имени пользователя."""
+    """Отображает экран для ввода имени пользователя и устанавливает cookie."""
     st.header("Добро пожаловать в калькулятор!")
     st.subheader("Пожалуйста, представьтесь, чтобы мы могли сохранить ваши данные.")
-    username = st.text_input("Введите ваше имя (например, Константинов Ярослав):", key="login_input")
+    
+    # Получаем доступ к нашему "станку для карт"
+    cookies = stx.CookieManager()
+    
+    username = st.text_input("Введите ваше имя (например, Анна, Иван Петрович):", key="login_input")
+    
     if st.button("Войти", key="login_button"):
         if username:
+            # Запоминаем имя в краткосрочной памяти
             st.session_state['username'] = username
+            # ГЛАВНОЕ ИЗМЕНЕНИЕ: Создаем "карту-ключ" и отдаем ее браузеру.
+            # Она будет "жить" 30 дней.
+            cookies.set('username', username, expires_at=datetime.datetime.now() + datetime.timedelta(days=30))
             st.rerun()
         else:
             st.warning("Пожалуйста, введите имя.")
