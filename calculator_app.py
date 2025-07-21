@@ -98,7 +98,7 @@ def display_login_screen(cookies): # <--- 1. Добавили аргумент '
     
     # 2. Строку cookies = stx.CookieManager() мы ПОЛНОСТЬЮ УДАЛИЛИ
     
-    username = st.text_input("Введите ваше имя (например, Иван, Иван Петрович):", key="login_input")
+    username = st.text_input("Введите ваше имя (например, Константинов Ярослав):", key="login_input")
     
     if st.button("Войти", key="login_button"):
         if username:
