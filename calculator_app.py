@@ -91,22 +91,19 @@ def reset_data():
     go_to_main_menu()
 
 # --- ЛОГИКА ОТОБРАЖЕНИЯ ---
-def display_login_screen():
+def display_login_screen(cookies): # <--- 1. Добавили аргумент 'cookies'
     """Отображает экран для ввода имени пользователя и устанавливает cookie."""
     st.header("Добро пожаловать в калькулятор!")
     st.subheader("Пожалуйста, представьтесь, чтобы мы могли сохранить ваши данные.")
     
-    # Получаем доступ к нашему "станку для карт"
-    cookies = stx.CookieManager()
+    # 2. Строку cookies = stx.CookieManager() мы ПОЛНОСТЬЮ УДАЛИЛИ
     
-    username = st.text_input("Введите ваше имя (например, Анна, Иван Петрович):", key="login_input")
+    username = st.text_input("Введите ваше имя (например, Иван, Иван Петрович):", key="login_input")
     
     if st.button("Войти", key="login_button"):
         if username:
-            # Запоминаем имя в краткосрочной памяти
             st.session_state['username'] = username
-            # ГЛАВНОЕ ИЗМЕНЕНИЕ: Создаем "карту-ключ" и отдаем ее браузеру.
-            # Она будет "жить" 30 дней.
+            # 3. Используем 'cookies', который пришел как аргумент
             cookies.set('username', username, expires_at=datetime.datetime.now() + datetime.timedelta(days=30))
             st.rerun()
         else:
@@ -190,7 +187,7 @@ def main():
 
     # Теперь основная логика
     if st.session_state.get('username') is None:
-        display_login_screen()
+        display_login_screen(cookies)
     else:
         if 'data_loaded' not in st.session_state:
             st.session_state['data'] = load_data_from_file(st.session_state['username'])
