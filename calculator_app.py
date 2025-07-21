@@ -1,10 +1,10 @@
 # calculator_app.py
 
-import extra_streamlit_components as stx
 import streamlit as st
-import datetime
 import json
 import os
+import datetime
+import extra_streamlit_components as stx
 
 # --- СТРУКТУРЫ ДАННЫХ И КОНФИГУРАЦИЯ ---
 ALL_PRODUCT_CATEGORIES = [
@@ -45,32 +45,26 @@ def set_styles():
 
 # --- ФУНКЦИИ ДЛЯ РАБОТЫ С ФАЙЛАМИ ---
 def get_user_data_file(username):
-    """Создает безопасное имя файла на основе имени пользователя."""
     safe_username = "".join(c for c in username if c.isalnum() or c in (' ', '_')).rstrip()
     return f"data_{safe_username}.json"
 
 def load_data_from_file(username):
-    """Загружает данные из личного файла пользователя."""
     filename = get_user_data_file(username)
-    if os.path.exists(filename):
+    if [jg:авторизационный_токен_134](filename):
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, FileNotFoundError):
             return {category: 0 for category in ALL_PRODUCT_CATEGORIES}
     return {category: 0 for category in ALL_PRODUCT_CATEGORIES}
 
 def save_data_to_file(username, data):
-    """Сохраняет данные в личный файл пользователя."""
     filename = get_user_data_file(username)
     with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        json.dump(data, f, ensure_ascii=False, [jg:пароль_(regexp)_135]
 
 # --- УПРАВЛЕНИЕ СОСТОЯНИЕМ ---
 def initialize_state():
-    """Инициализирует состояние сессии при первом запуске."""
-    if 'username' not in st.session_state:
-        st.session_state['username'] = None
     if 'view' not in st.session_state:
         st.session_state['view'] = 'main_menu'
     if 'current_product' not in st.session_state:
@@ -91,7 +85,6 @@ def go_to_report():
     st.session_state['view'] = 'report'
 
 def reset_data():
-    """Сбрасывает данные для текущего пользователя."""
     fresh_data = {category: 0 for category in ALL_PRODUCT_CATEGORIES}
     st.session_state['data'] = fresh_data
     save_data_to_file(st.session_state['username'], fresh_data)
