@@ -1,1 +1,5 @@
 streamlit-cookies-manager
+streamlit
+pandas
+numpy
+extra-streamlit-components 
